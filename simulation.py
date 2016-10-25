@@ -14,15 +14,15 @@ simulation_time = 3 #give the network sufficient time to transfer all packets be
 
 if __name__ == '__main__':
     object_L = [] #keeps track of objects, so we can kill their threads
-    table = {}
+    table = [0,0,0,0,0,0,0,0]
     #create network nodes
     client = network.Host(1, 50)
-    table['1'] = 50
+    table.insert(1, 50)
     object_L.append(client)
     server = network.Host(2, 30)
-    table['2'] = 30
+    table.insert(2, 30)
     object_L.append(server)
-    router_a = network.Router(name='A', intf_count=1, max_queue_size=router_queue_size, **table)
+    router_a = network.Router(*table, name='A', intf_count=1, max_queue_size=router_queue_size)
     object_L.append(router_a)
     
     #create a Link Layer to keep track of links between network nodes
