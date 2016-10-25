@@ -57,7 +57,7 @@ class NetworkPacket:
     @classmethod
     def from_byte_S(self, byte_S):
         fragment = int(byte_S[0 : 1])
-        dst_addr = int(byte_S[1 : NetworkPacket.dst_addr_S_length - 1])
+        dst_addr = int(byte_S[1 : NetworkPacket.dst_addr_S_length])
         data_S = byte_S[NetworkPacket.dst_addr_S_length : ]
         return self(fragment, dst_addr, data_S)
     
@@ -118,8 +118,8 @@ class Router:
     ##@param name: friendly router name for debugging
     # @param intf_count: the number of input and output interfaces 
     # @param max_queue_size: max queue length (passed to Interface)
-    def __init__(self, name, intf_count, max_queue_size, **table):
-        self.table = table
+    def __init__(self, *args, name, intf_count, max_queue_size):
+        self.table = args
         self.stop = False #for thread termination
         self.name = name
         #create a list of interfaces
@@ -143,7 +143,8 @@ class Router:
                     p = NetworkPacket.from_byte_S(pkt_S) #parse a packet out
                     # HERE you will need to implement a lookup into the 
                     # forwarding table to find the appropriate outgoing interface
-                    sentMTU = p
+                    print(self.table[p.dst_addr]) 
+                    #sendMTU = self.table[p.dst_addr]
                     # for now we assume the outgoing interface is also i
                     self.out_intf_L[i].put(p.to_byte_S(), True)
                     print('%s: forwarding packet "%s" from interface %d to %d \n' % (self, p, i, i))
