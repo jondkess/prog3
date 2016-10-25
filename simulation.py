@@ -10,17 +10,19 @@ from time import sleep
 
 ##configuration parameters
 router_queue_size = 0 #0 means unlimited
-simulation_time = 1 #give the network sufficient time to transfer all packets before quitting
+simulation_time = 3 #give the network sufficient time to transfer all packets before quitting
 
 if __name__ == '__main__':
     object_L = [] #keeps track of objects, so we can kill their threads
-    
+    table = {}
     #create network nodes
-    client = network.Host(1)
+    client = network.Host(1, 50)
+    table['1'] = 50
     object_L.append(client)
-    server = network.Host(2)
+    server = network.Host(2, 30)
+    table['2'] = 30
     object_L.append(server)
-    router_a = network.Router(name='A', intf_count=1, max_queue_size=router_queue_size)
+    router_a = network.Router(name='A', intf_count=1, max_queue_size=router_queue_size, **table)
     object_L.append(router_a)
     
     #create a Link Layer to keep track of links between network nodes
