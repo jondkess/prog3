@@ -95,9 +95,7 @@ class Host:
         
     ## receive packet from the network layer
     def udt_receive(self):
-        response = list(self.in_intf_L[0].get())
-        header = response[0 : 5] 
-        pkt_S = str(response[5:])
+        pkt_S = self.in_intf_L[0].get()
         if pkt_S is not None:
             print('%s: received packet "%s"\n' % (self, pkt_S))
        
@@ -145,7 +143,7 @@ class Router:
                     p = NetworkPacket.from_byte_S(pkt_S) #parse a packet out
                     # HERE you will need to implement a lookup into the 
                     # forwarding table to find the appropriate outgoing interface
-                    sentMTU
+                    sentMTU = p
                     # for now we assume the outgoing interface is also i
                     self.out_intf_L[i].put(p.to_byte_S(), True)
                     print('%s: forwarding packet "%s" from interface %d to %d \n' % (self, p, i, i))
