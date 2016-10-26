@@ -74,6 +74,7 @@ class Host:
         self.in_intf_L = [Interface()]
         self.out_intf_L = [Interface()]
         self.stop = False #for thread termination
+        self.msg = ''
     
     ## called when printing the object
     def __str__(self):
@@ -97,7 +98,13 @@ class Host:
     def udt_receive(self):
         pkt_S = self.in_intf_L[0].get()
         if pkt_S is not None:
-            print('%s: received packet "%s"\n' % (self, pkt_S))
+            p = NetworkPacket.from_byte_S(pkt_S) #parse a packet out
+            if p.fragment == 1:
+                self.msg += p.data_S
+            else:
+                self.msg += p.data_S
+                print('%s: received packet "%s"\n' % (self, self.msg))
+                self.msg = ''
        
     ## thread target for the host to keep receiving data
     def run(self):
@@ -143,11 +150,21 @@ class Router:
                     p = NetworkPacket.from_byte_S(pkt_S) #parse a packet out
                     # HERE you will need to implement a lookup into the 
                     # forwarding table to find the appropriate outgoing interface
-                    print(self.table[p.dst_addr]) 
-                    #sendMTU = self.table[p.dst_addr]
+                    sendMTU = self.table[p.dst_addr]    #size of MTU we're sending through
+
+                    sent = 0  #sent starts at 0
+                    opn_spc = sendMTU-p.dst_addr_S_length #open space after using space for frag and dest address
+                    while sent < len(p.data_S):
+                        if ((sent + opn_spc) >= len(p.data_S)):
+                            pkt = NetworkPacket(p.fragment, p.dst_addr, p.data_S[sent:len(p.data_S)])
+                        else:
+                            pkt = NetworkPacket(1, p.dst_addr, p.data_S[sent:sent + opn_spc])
+                        sent += opn_spc #Increment sendMTU to space where last packet left off
+                        self.out_intf_L[i].put(pkt.to_byte_S(), True) #send packets always enqueued successfully
+                        print('%s: forwarding packet "%s" from interface %d to %d \n' % (self, pkt, i, i))
                     # for now we assume the outgoing interface is also i
-                    self.out_intf_L[i].put(p.to_byte_S(), True)
-                    print('%s: forwarding packet "%s" from interface %d to %d \n' % (self, p, i, i))
+                    #self.out_intf_L[pkt.dst_addr].put(pkt.to_byte_S(), True)
+                    #print('%s: forwarding packet "%s" from interface %d to %d \n' % (self, pkt, i, pkt.dst_addr))
             except queue.Full:
                 print('%s: packet "%s" lost on interface %d' % (self, p, i))
                 pass
